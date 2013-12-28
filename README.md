@@ -57,7 +57,7 @@ function animate() {
 </script>
 ```
 
-then after, you will control camera with mouse drag / wheel, like [the result](http://yomotsu.github.io/SphereCamera/example/demo1.html).
+then after, you can control the camera with mouse drag / wheel, like [the result](http://yomotsu.github.io/SphereCamera/example/demo1.html).
 
 ## Params
 
@@ -76,8 +76,10 @@ mouseAccelerationY | mouse acceleration for vertical
 
 ## Method
 
+```
 instance.getFrontAngle() | you'll get front angle in degrees
 instance.update()        | when you changed params manually, use `update`
+```
 
 ## Demos
 
