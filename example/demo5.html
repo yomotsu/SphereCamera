@@ -19,12 +19,14 @@ canvas{
 div{
   color: #fff;
   position: absolute;
+  height: 100%;
+  overflow: hidden;
   background: rgba( 0, 0, 0, .75 );
 }
 </style>
 </head>
 <body>
-<div>drag around to rotate the camera, it will be hitting with objects</div>
+<div id="log">drag around to rotate</div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="vendor/three.min.js"></script>
@@ -57,30 +59,26 @@ scene.add( mesh );
 
 scene.add( new THREE.AxisHelper( 5 ) );
 
-var obstacle1 = new THREE.Mesh(
-  new THREE.CubeGeometry( 3, 10, 3 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle1.position.set( 5, 0, 5 );
-scene.add( obstacle1 );
-
-var obstacle2 = new THREE.Mesh(
-  new THREE.CylinderGeometry( 2, 2, 10, 16 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle2.position.set( -5, 0, -5 );
-scene.add( obstacle2 );
-
-var params = {
-  rigidObjects: [ ground, obstacle1, obstacle2 ]
-};
-var sphereCamera = new SphereCamera( camera, params );
+var sphereCamera = new SphereCamera( camera );
 
 ( function renderLoop (){
   requestAnimationFrame( renderLoop );
   renderer.render( scene, camera );
 } )();
 
+$log = $( '#log' );
+
+sphereCamera.addEventListener( 'mousedown', function () {
+  $log.prepend( 'mousedown<br>' )
+} );
+
+sphereCamera.addEventListener( 'mouseup', function () {
+  $log.prepend( 'mouseup<br>' )
+} );
+
+sphereCamera.addEventListener( 'updated', function () {
+  $log.prepend( 'updated<br>' )
+} );
 </script>
 </body>
 </html>

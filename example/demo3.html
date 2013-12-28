@@ -24,7 +24,7 @@ div{
 </style>
 </head>
 <body>
-<div>drag around to rotate the camera, it will be hitting with objects</div>
+<div>center of sphereCamera can be moved. you can drag to rotate the camera while moving</div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="vendor/three.min.js"></script>
@@ -32,6 +32,8 @@ div{
 <script>
 var width  = window.innerWidth,
     height = window.innerHeight;
+
+var clock = new THREE.Clock();
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 40, width / height, 1, 1000 );
@@ -57,27 +59,15 @@ scene.add( mesh );
 
 scene.add( new THREE.AxisHelper( 5 ) );
 
-var obstacle1 = new THREE.Mesh(
-  new THREE.CubeGeometry( 3, 10, 3 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle1.position.set( 5, 0, 5 );
-scene.add( obstacle1 );
-
-var obstacle2 = new THREE.Mesh(
-  new THREE.CylinderGeometry( 2, 2, 10, 16 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle2.position.set( -5, 0, -5 );
-scene.add( obstacle2 );
-
-var params = {
-  rigidObjects: [ ground, obstacle1, obstacle2 ]
-};
-var sphereCamera = new SphereCamera( camera, params );
+var sphereCamera = new SphereCamera( camera );
 
 ( function renderLoop (){
   requestAnimationFrame( renderLoop );
+  var elapsed = clock.getElapsedTime();
+  var x = Math.sin( elapsed ) * 3;
+  sphereCamera.center.x = x;
+  mesh.position.x = x;
+  sphereCamera.update();
   renderer.render( scene, camera );
 } )();
 

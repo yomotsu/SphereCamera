@@ -10,10 +10,6 @@ body{
   background: #000;
 }
 canvas{
-  cursor: move;
-  cursor: -webkit-grab;
-  cursor: -moz-grab;
-  cursor: grab;
   display: block;
 }
 div{
@@ -24,7 +20,12 @@ div{
 </style>
 </head>
 <body>
-<div>drag around to rotate the camera, it will be hitting with objects</div>
+<div>
+<div>
+  horizontal<input type="range" value="0" min="0" max="360" step="0.1" id="input_h"><br>
+  vertical<input type="range" value="0" min="-90" max="90" step="0.1" id="input_v"><br>
+  zoom<input type="range" value="10" min="1" max="30" step="1" id="input_zoom"><br>
+</div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="vendor/three.min.js"></script>
@@ -57,22 +58,9 @@ scene.add( mesh );
 
 scene.add( new THREE.AxisHelper( 5 ) );
 
-var obstacle1 = new THREE.Mesh(
-  new THREE.CubeGeometry( 3, 10, 3 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle1.position.set( 5, 0, 5 );
-scene.add( obstacle1 );
-
-var obstacle2 = new THREE.Mesh(
-  new THREE.CylinderGeometry( 2, 2, 10, 16 ),
-  new THREE.MeshNormalMaterial()
-);
-obstacle2.position.set( -5, 0, -5 );
-scene.add( obstacle2 );
-
 var params = {
-  rigidObjects: [ ground, obstacle1, obstacle2 ]
+  mouseAccelerationX: 0,
+  mouseAccelerationY: 0
 };
 var sphereCamera = new SphereCamera( camera, params );
 
@@ -81,6 +69,18 @@ var sphereCamera = new SphereCamera( camera, params );
   renderer.render( scene, camera );
 } )();
 
+$( '#input_h' ).on( 'change', function () {
+  sphereCamera.lon = $( this ).val();
+  sphereCamera.update();
+} );
+$( '#input_v' ).on( 'change', function () {
+  sphereCamera.lat = $( this ).val();
+  sphereCamera.update();
+} );
+$( '#input_zoom' ).on( 'change', function () {
+  sphereCamera.radius = $( this ).val();
+  sphereCamera.update();
+} );
 </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 // @author yomotsu
 // MIT License
+// https://github.com/yomotsu/SphereCamera
 ( function ( ns ) {
-  const MOUSE_ACCELERATION_X = 100;
-  const MOUSE_ACCELERATION_Y = 50;
+  var vec3 = new THREE.Vector3();
 
   // camera              isntance of THREE.Camera
   // params.el           DOM element
@@ -12,16 +12,25 @@
   // params.maxRadius    number
   // params.rigidObjects array of inctances of THREE.Mesh
   var SphereCamera = function ( camera, params ) {
+    console.log( params && params.radius || 1000 );
+    THREE.EventDispatcher.prototype.apply( this );
     this.camera = camera;
     this.el           = params && params.el || window;
     this.$el          = $( this.el );
     this.center       = params && params.center || new THREE.Vector3();
-    this.radius       = params && params.radius || 10;
+    this.radius       = params && params.radius    || 10;
     this.minRadius    = params && params.minRadius || 1;
     this.maxRadius    = params && params.maxRadius || 30;
     this.rigidObjects = params && params.rigidObjects || [];
     this.lat = 0;
-    this.lon = -90;
+    this.lon = 0;
+    this._phi;   // angle of zenith
+    this._theta; // angle of azimuth
+    // this.disableMouseX = params && params.disableMouseX || false; // need these?
+    // this.disableMouseY = params && params.disableMouseY || false;
+    // this.disableWheel  = params && params.disableWheel  || false;
+    this.mouseAccelerationX = params && params.mouseAccelerationX !== undefined ? params.mouseAccelerationX : 100;
+    this.mouseAccelerationY = params && params.mouseAccelerationY !== undefined ? params.mouseAccelerationY : 50;
     this._pointerStart = { x: 0, y: 0 };
     this._pointerLast  = { x: 0, y: 0 };
 
@@ -47,61 +56,66 @@
     this.lat = this.lat >  90 ?  90 :
                this.lat < -90 ? -90 :
                this.lat;
-    // angle of zenith
-    var phi = THREE.Math.degToRad( this.lat );
-    // angle of azimuth
-    var theta = -1 * THREE.Math.degToRad( this.lon );
-    var distance = this.collisionTest();
+    this.lon = this.lon < 0 ? 360 + this.lon % 360 : this.lon % 360;
+    this._phi   =  THREE.Math.degToRad( this.lat );
+    this._theta = -THREE.Math.degToRad( this.lon - 90 );
+    var distance = collisionTest( this );
 
     var position = new THREE.Vector3( 
-      Math.cos( phi ) * Math.cos( theta ), 
-      Math.sin( phi ), 
-      Math.cos( phi ) * Math.sin( theta )
+      Math.cos( this._phi ) * Math.cos( this._theta ), 
+      Math.sin( this._phi ), 
+      Math.cos( this._phi ) * Math.sin( this._theta )
     ).multiplyScalar( distance );
-    position = position.addVectors( position, this.center );
+    position = vec3.addVectors( position, this.center );
     this.camera.position = position;
     if ( this.lat === 90 ) {
       this.camera.up.set(
-        Math.cos( theta +  THREE.Math.degToRad( 180 ) ),
+        Math.cos( this._theta + THREE.Math.degToRad( 180 ) ),
         0,
-        Math.sin( theta +  THREE.Math.degToRad( 180 ) )
+        Math.sin( this._theta + THREE.Math.degToRad( 180 ) )
       );
     } else if ( this.lat === -90 ) {
       this.camera.up.set(
-        Math.cos( theta ),
+        Math.cos( this._theta ),
         0,
-        Math.sin( theta )
+        Math.sin( this._theta )
       );
     } else {
       this.camera.up.set( 0, 1, 0 );
     }
     this.camera.lookAt( this.center );
+    this.dispatchEvent( { type: 'updated' } );
   }
 
-  SphereCamera.prototype.collisionTest = function ( direction ) {
-    if ( this.rigidObjects.length === 0 ) {
-      return this.radius;
+  SphereCamera.prototype.getFrontAngle = function () {
+    return 360 - this.lon;
+  }
+
+  function collisionTest ( instance ) {
+    if ( instance.rigidObjects.length === 0 ) {
+      return instance.radius;
     }
     var direction = new THREE.Vector3(
-      this.camera.position.x - this.center.x,
-      this.camera.position.y - this.center.y,
-      this.camera.position.z - this.center.z
+      instance.camera.position.x - instance.center.x,
+      instance.camera.position.y - instance.center.y,
+      instance.camera.position.z - instance.center.z
     ).normalize();
     var raycaster = new THREE.Raycaster(
-      this.center,    // origin
-      direction,      // direction
-      this.minRadius, // near
-      this.radius     // far
+      instance.center,    // origin
+      direction,          // direction
+      instance.minRadius, // near
+      instance.radius     // far
     );
-    var intersects = raycaster.intersectObjects( this.rigidObjects );
+    var intersects = raycaster.intersectObjects( instance.rigidObjects );
     if ( intersects.length >= 1 ){
       return intersects[ 0 ].distance;
     } else {
-      return this.radius
+      return instance.radius
     }
   };
 
   function onmousedown () {
+    this.dispatchEvent( { type: 'mousedown' } );
     this._pointerStart.x = event.clientX;
     this._pointerStart.y = event.clientY;
     this._pointerLast.x = this.lon;
@@ -111,6 +125,7 @@
   }
 
   function onmouseup () {
+    this.dispatchEvent( { type: 'mouseup' } );
     this.el.removeEventListener( 'mousemove', this._mousedragListener, false );
   }
 
@@ -119,8 +134,8 @@
     var h = this.$el.height();
     var x = ( this._pointerStart.x - event.clientX ) / w * 2;
     var y = ( this._pointerStart.y - event.clientY ) / h * 2;
-    this.lon = this._pointerLast.x + x * MOUSE_ACCELERATION_X;
-    this.lat = this._pointerLast.y + y * MOUSE_ACCELERATION_Y;
+    this.lon = this._pointerLast.x + x * this.mouseAccelerationX;
+    this.lat = this._pointerLast.y + y * this.mouseAccelerationY;
     this.update();
   }
 

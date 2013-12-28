@@ -16,48 +16,59 @@ canvas{
   cursor: grab;
   display: block;
 }
+div{
+  color: #fff;
+  position: absolute;
+  background: rgba( 0, 0, 0, .75 );
+}
 </style>
 </head>
 <body>
+<div>you can drag to rotate the camera, scroll wheel to zooming</div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="vendor/three.min.js"></script>
 <script src="../SphereCamera.js"></script>
 <script>
-var width  = window.innerWidth,
-    height = window.innerHeight;
+var width = window.innerWidth,
+    height = window.innerHeight,
+    camera,
+    scene,
+    renderer,
+    mesh,
+    sphereCamera;
 
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 40, width / height, 1, 1000 );
+init();
+animate();
 
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize( width, height );
-renderer.setClearColor( 0x000000 );
-document.body.appendChild( renderer.domElement );
+function init() {
+  camera = new THREE.PerspectiveCamera( 75, width / height, 1, 10000 );
+  scene = new THREE.Scene();
 
-var mesh = new THREE.Mesh(
-  new THREE.CubeGeometry( 3, 3, 3 ),
-  new THREE.MeshNormalMaterial()
-);
-scene.add( mesh );
+  mesh = new THREE.Mesh(
+    new THREE.CubeGeometry( 200, 200, 200 ),
+    new THREE.MeshNormalMaterial()
+  );
+  scene.add( mesh );
 
-var ground = new THREE.Mesh(
-  new THREE.PlaneGeometry( 64, 64, 16, 16 ),
-  new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
-);
-ground.rotation.x = Math.PI / -2;
-ground.position.y = -2;
-scene.add( ground );
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize( width, height );
+  document.body.appendChild( renderer.domElement );
 
-scene.add( new THREE.AxisHelper( 5 ) );
+  sphereCamera = new SphereCamera(
+    camera,
+    {
+      radius    : 300,
+      minRadius : 200,
+      maxRadius : 1000
+    }
+   );
+ }
 
-var sphereCamera = new SphereCamera( camera, { rigidObjects: [ ground ] } );
-
-( function renderLoop (){
-  requestAnimationFrame( renderLoop );
+function animate() {
+  requestAnimationFrame( animate );
   renderer.render( scene, camera );
-} )();
-
+}
 </script>
 </body>
 </html>
