@@ -12,7 +12,6 @@
   // params.maxRadius    number
   // params.rigidObjects array of inctances of THREE.Mesh
   var SphereCamera = function ( camera, params ) {
-    console.log( params && params.radius || 1000 );
     THREE.EventDispatcher.prototype.apply( this );
     this.camera = camera;
     this.el           = params && params.el || window;
