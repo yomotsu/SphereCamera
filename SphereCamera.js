@@ -7,23 +7,30 @@
   // camera              isntance of THREE.Camera
   // params.el           DOM element
   // params.center       instance of THREE.Vector3
-  // params.raduis       number
-  // params.minRaduis    number
-  // params.maxRaduis    number
+  // params.radius       number
+  // params.minRadius    number
+  // params.maxRadius    number
   // params.rigidObjects array of inctances of THREE.Mesh
   var SphereCamera = function ( camera, params ) {
     this.camera = camera;
     this.el           = params && params.el || window;
     this.$el          = $( this.el );
     this.center       = params && params.center || new THREE.Vector3();
-    this.raduis       = params && params.raduis || 10;
-    this.minRaduis    = params && params.minRaduis || 1;
-    this.maxRaduis    = params && params.maxRaduis || 30;
+    this.radius       = params && params.radius || 10;
+    this.minRadius    = params && params.minRadius || 1;
+    this.maxRadius    = params && params.maxRadius || 30;
     this.rigidObjects = params && params.rigidObjects || [];
     this.lat = 0;
     this.lon = -90;
     this._pointerStart = { x: 0, y: 0 };
     this._pointerLast  = { x: 0, y: 0 };
+
+    this.camera.position.set(
+      this.center.x,
+      this.center.y,
+      this.center.z + 1
+    );
+    this.update();
 
     this._mousedownListener = onmousedown.bind( this );
     this._mouseupListener   = onmouseup.bind( this );
@@ -34,11 +41,12 @@
     this.el.addEventListener( 'mouseup',   this._mouseupListener,   false );
     this.el.addEventListener( 'mousewheel',     this._scrollListener, false );
     this.el.addEventListener( 'DOMMouseScroll', this._scrollListener, false );
-
-    this.update();
   }
 
   SphereCamera.prototype.update = function () {
+    this.lat = this.lat >  90 ?  90 :
+               this.lat < -90 ? -90 :
+               this.lat;
     // angle of zenith
     var phi = THREE.Math.degToRad( this.lat );
     // angle of azimuth
@@ -72,7 +80,7 @@
 
   SphereCamera.prototype.collisionTest = function ( direction ) {
     if ( this.rigidObjects.length === 0 ) {
-      return this.raduis;
+      return this.radius;
     }
     var direction = new THREE.Vector3(
       this.camera.position.x - this.center.x,
@@ -82,14 +90,14 @@
     var raycaster = new THREE.Raycaster(
       this.center,    // origin
       direction,      // direction
-      this.minRaduis, // near
-      this.raduis     // far
+      this.minRadius, // near
+      this.radius     // far
     );
     var intersects = raycaster.intersectObjects( this.rigidObjects );
     if ( intersects.length >= 1 ){
       return intersects[ 0 ].distance;
     } else {
-      return this.raduis;
+      return this.radius
     }
   };
 
@@ -112,11 +120,7 @@
     var x = ( this._pointerStart.x - event.clientX ) / w * 2;
     var y = ( this._pointerStart.y - event.clientY ) / h * 2;
     this.lon = this._pointerLast.x + x * MOUSE_ACCELERATION_X;
-               this.lon;
     this.lat = this._pointerLast.y + y * MOUSE_ACCELERATION_Y;
-    this.lat = this.lat >  90 ?  90 :
-               this.lat < -90 ? -90 :
-               this.lat;
     this.update();
   }
 
@@ -124,16 +128,16 @@
     event.preventDefault();
     // WebKit
     if ( event.wheelDeltaY ) {
-      this.raduis -= event.wheelDeltaY * 0.05 / 5;
+      this.radius -= event.wheelDeltaY * 0.05 / 5;
     // IE
     } else if ( event.wheelDelta ) {
-      this.raduis -= event.wheelDelta * 0.05 / 5;
+      this.radius -= event.wheelDelta * 0.05 / 5;
     // Firefox
     } else if ( event.detail ) {
-      this.raduis += event.detail / 5;
+      this.radius += event.detail / 5;
     }
-    this.raduis = Math.max( this.raduis, this.minRaduis );
-    this.raduis = Math.min( this.raduis, this.maxRaduis );
+    this.radius = Math.max( this.radius, this.minRadius );
+    this.radius = Math.min( this.radius, this.maxRadius );
     this.update();
   }
 
